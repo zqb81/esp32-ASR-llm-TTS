@@ -1,0 +1,523 @@
+/* pages/ai/ai.wxss — 微信聊天布局 (深色太空主题) */
+
+page {
+  background-color: #060913 !important;
+  background-image: radial-gradient(circle at 50% -20%, #1e294b 0%, #060913 70%) !important;
+  color: var(--text-main) !important;
+}
+
+.page-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+  background-color: transparent;
+  color: var(--text-main);
+}
+
+/* 1. 全局顶部连接状态栏 (微信公告栏样式 - 暗色玻璃质感) */
+.ai-status-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18rpx 32rpx;
+  background: rgba(13, 20, 38, 0.45);
+  backdrop-filter: blur(16px);
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
+  z-index: 10;
+}
+
+.status-indicators {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.status-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+}
+
+.status-dot.on {
+  background: #10b981;
+  box-shadow: 0 0 10rpx #10b981;
+  animation: breathe-green-glow 2s infinite ease-in-out;
+}
+
+.status-dot.off {
+  background: #f43f5e;
+  box-shadow: 0 0 10rpx #f43f5e;
+}
+
+@keyframes breathe-green-glow {
+  0%, 100% {
+    opacity: 0.8;
+    box-shadow: 0 0 6rpx #10b981;
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 16rpx #10b981;
+  }
+}
+
+.status-label {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.auto-speak-toggle {
+  margin: 0 !important;
+  padding: 8rpx 20rpx !important;
+  font-size: 22rpx !important;
+  font-weight: 500 !important;
+  border-radius: 30rpx !important;
+  background: rgba(56, 189, 248, 0.1) !important;
+  color: #38bdf8 !important;
+  border: 1rpx solid rgba(56, 189, 248, 0.25) !important;
+  line-height: 1.4 !important;
+  min-width: 150rpx;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auto-speak-toggle.active {
+  background: rgba(56, 189, 248, 0.2) !important;
+}
+
+.auto-speak-toggle::after {
+  border: none;
+}
+
+/* 2. 聊天历史滚动面板 */
+.chat-scroll-view {
+  flex: 1;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* 欢迎卡片 (微信服务号通知风格 - 太空舱玻璃材质) */
+.welcome-container {
+  padding: 40rpx 32rpx;
+}
+
+.welcome-card {
+  background: rgba(13, 20, 38, 0.35);
+  border: 1rpx solid rgba(255, 255, 255, 0.06);
+  border-radius: 12rpx;
+  padding: 40rpx 32rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 12rpx 40rpx rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(20px);
+}
+
+.welcome-robot {
+  font-size: 80rpx;
+  margin-bottom: 16rpx;
+  animation: floatRobot 3s ease-in-out infinite;
+}
+
+@keyframes floatRobot {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8rpx); }
+}
+
+.welcome-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: var(--text-main);
+  margin-bottom: 16rpx;
+  letter-spacing: 2rpx;
+  text-shadow: 0 2rpx 10rpx rgba(56, 189, 248, 0.15);
+}
+
+.welcome-desc {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  text-align: justify;
+}
+
+/* 微信时间戳 */
+.chat-time-wrap {
+  text-align: center;
+  margin: 24rpx 0;
+}
+
+.chat-time {
+  font-size: 22rpx;
+  color: var(--text-muted);
+  background-color: rgba(255, 255, 255, 0.03);
+  padding: 4rpx 12rpx;
+  border-radius: 6rpx;
+  display: inline-block;
+}
+
+/* 系统消息 */
+.system-msg-row {
+  text-align: center;
+  margin: 24rpx 32rpx;
+}
+
+.system-msg-text {
+  font-size: 24rpx;
+  color: var(--text-muted);
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1rpx solid rgba(255, 255, 255, 0.04);
+  padding: 6rpx 20rpx;
+  border-radius: 8rpx;
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  max-width: 80%;
+  word-break: break-all;
+}
+
+.system-icon {
+  font-size: 22rpx;
+}
+
+/* 对话消息行 */
+.chat-msg-row {
+  display: flex;
+  padding: 16rpx 24rpx;
+  margin-bottom: 8rpx;
+  box-sizing: border-box;
+}
+
+.chat-msg-row.user {
+  flex-direction: row-reverse;
+}
+
+.chat-msg-row.assistant {
+  flex-direction: row;
+}
+
+/* 方形圆角头像 */
+.avatar-wrap {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 8rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.chat-msg-row.user .avatar-wrap {
+  background-color: rgba(56, 189, 248, 0.15);
+  border: 1rpx solid rgba(56, 189, 248, 0.3);
+  margin-left: 24rpx;
+}
+
+.chat-msg-row.assistant .avatar-wrap {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1rpx solid rgba(255, 255, 255, 0.08);
+  margin-right: 24rpx;
+}
+
+.avatar-emoji {
+  font-size: 44rpx;
+}
+
+/* 气泡包裹层 */
+.bubble-container {
+  display: flex;
+  max-width: calc(100% - 200rpx);
+  align-items: flex-start;
+}
+
+.chat-bubble {
+  position: relative;
+  padding: 22rpx 26rpx;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  line-height: 1.5;
+  word-break: break-all;
+  box-sizing: border-box;
+}
+
+/* 用户气泡 (科技蓝渐变) */
+.chat-bubble.user {
+  background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+  color: #ffffff;
+}
+
+.chat-bubble.user::after {
+  content: "";
+  position: absolute;
+  top: 26rpx;
+  right: -10rpx;
+  width: 0;
+  height: 0;
+  border-top: 10rpx solid transparent;
+  border-bottom: 10rpx solid transparent;
+  border-left: 10rpx solid #2563eb; /* 指向头像，与渐变末端颜色对齐 */
+}
+
+/* AI 助手气泡 (暗太空灰) */
+.chat-bubble.assistant {
+  background: rgba(30, 41, 59, 0.55);
+  backdrop-filter: blur(8px);
+  border: 1rpx solid rgba(255, 255, 255, 0.06);
+  color: var(--text-main);
+}
+
+.chat-bubble.assistant::before {
+  content: "";
+  position: absolute;
+  top: 26rpx;
+  left: -12rpx;
+  width: 0;
+  height: 0;
+  border-top: 10rpx solid transparent;
+  border-bottom: 10rpx solid transparent;
+  border-right: 10rpx solid rgba(255, 255, 255, 0.06);
+  z-index: 1;
+}
+
+.chat-bubble.assistant::after {
+  content: "";
+  position: absolute;
+  top: 26rpx;
+  left: -10rpx;
+  width: 0;
+  height: 0;
+  border-top: 10rpx solid transparent;
+  border-bottom: 10rpx solid transparent;
+  border-right: 10rpx solid rgb(24, 33, 49); /* 半透明气泡叠加暗背景后的视错觉实色 */
+  z-index: 2;
+}
+
+/* AI 播报可点击状态 */
+.chat-bubble.playable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.chat-bubble.playable:active {
+  background-color: rgba(30, 41, 59, 0.85);
+  transform: scale(0.98);
+}
+
+.chat-bubble.playable:active::after {
+  border-right-color: rgba(30, 41, 59, 0.85);
+}
+
+.bubble-text {
+  vertical-align: middle;
+}
+
+.replay-speaker-icon {
+  font-size: 24rpx;
+  margin-left: 12rpx;
+  display: inline-block;
+  vertical-align: middle;
+  color: #38bdf8;
+  text-shadow: 0 0 6rpx rgba(56, 189, 248, 0.5);
+}
+
+/* 占位，防止输入框遮挡 */
+.bottom-placeholder {
+  height: 200rpx;
+}
+
+/* 3. 悬浮录音全屏遮罩 (微信同款暗色弹窗) */
+.recording-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(6, 9, 19, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.recording-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.recording-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 320rpx;
+  height: 320rpx;
+  border-radius: 20rpx;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1rpx solid rgba(255, 255, 255, 0.08);
+  padding: 30rpx;
+  box-sizing: border-box;
+}
+
+.recording-mic-icon {
+  font-size: 88rpx;
+  color: #38bdf8;
+  margin-bottom: 16rpx;
+  line-height: 1;
+  text-shadow: 0 0 15rpx rgba(56, 189, 248, 0.5);
+}
+
+.recording-volume-bar {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin-bottom: 24rpx;
+  height: 20rpx;
+}
+
+.volume-dot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.volume-dot.active {
+  background-color: #38bdf8;
+  transform: scale(1.3);
+  animation: volume-pulse 0.8s infinite ease-in-out;
+}
+
+@keyframes volume-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.4); opacity: 1; }
+}
+
+.recording-status-text {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #ffffff;
+  margin-bottom: 8rpx;
+}
+
+.recording-hint {
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* 4. 底部微信聊天输入栏 (太空暗色面板) */
+.bottom-input-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(108rpx + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  background-color: rgba(13, 20, 38, 0.75);
+  backdrop-filter: blur(24px);
+  border-top: 1rpx solid rgba(255, 255, 255, 0.08);
+  padding: 0 20rpx env(safe-area-inset-bottom) 20rpx;
+  box-sizing: border-box;
+  z-index: 100;
+}
+
+.mode-toggle-btn {
+  width: 76rpx;
+  height: 76rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.toggle-icon {
+  font-size: 52rpx;
+  color: #38bdf8;
+  line-height: 1;
+}
+
+.chat-input-field {
+  flex: 1;
+  height: 76rpx;
+  min-height: 76rpx;
+  line-height: 76rpx;
+  background-color: rgba(6, 9, 19, 0.45);
+  border: 1rpx solid rgba(255, 255, 255, 0.08);
+  border-radius: 8rpx;
+  padding: 0 20rpx;
+  color: #ffffff;
+  font-size: 28rpx;
+  margin: 0 16rpx;
+  box-sizing: border-box;
+}
+
+.send-btn {
+  width: 120rpx !important;
+  height: 76rpx;
+  padding: 0 !important;
+  font-size: 28rpx !important;
+  border-radius: 8rpx !important;
+  margin: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  color: var(--text-muted) !important;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: none !important;
+}
+
+.send-btn.active {
+  background: linear-gradient(135deg, #38bdf8, #0ea5e9) !important;
+  color: #060913 !important;
+}
+
+.send-btn::after {
+  border: none;
+}
+
+.hold-speak-btn {
+  flex: 1;
+  height: 76rpx;
+  border-radius: 8rpx;
+  background-color: rgba(56, 189, 248, 0.08);
+  border: 1rpx solid rgba(56, 189, 248, 0.25);
+  color: #38bdf8;
+  font-size: 28rpx;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 16rpx !important;
+  padding: 0 !important;
+  transition: all 0.15s ease;
+}
+
+.hold-speak-btn::after {
+  border: none;
+}
+
+.hold-speak-btn.active {
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+.hide {
+  display: none !important;
+}

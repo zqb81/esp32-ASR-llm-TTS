@@ -1,0 +1,224 @@
+/* pages/config/config.wxss — 系统配置与终端日志样式 */
+
+.tab-content-fade {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.input-group-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  margin-bottom: 16rpx;
+}
+
+.input-row {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.input-label {
+  font-size: 20rpx;
+  color: var(--text-muted);
+  font-weight: 600;
+  padding-left: 4rpx;
+  letter-spacing: 0.5rpx;
+}
+
+.picker-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.conn-toggle-btn {
+  width: 100%;
+}
+
+/* 警报阈值 Slider */
+.slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  width: 100%;
+}
+
+.slider-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.slider-title {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.slider-val-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 4rpx;
+}
+
+.slider-val-num {
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.slider-val-unit {
+  font-size: 18rpx;
+  color: var(--text-muted);
+}
+
+.text-light-glow {
+  color: #fef08a;
+  text-shadow: 0 0 8rpx rgba(254, 240, 138, 0.3);
+}
+
+/* 外设检测 Chip */
+.device-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.dev-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10rpx;
+  padding: 12rpx 20rpx;
+  border-radius: 20rpx;
+  font-size: 18rpx;
+  font-weight: 600;
+  border: 1rpx solid rgba(255, 255, 255, 0.06);
+  transition: all 0.3s ease;
+}
+
+.dev-chip.online {
+  border-color: rgba(16, 185, 129, 0.25);
+  background: rgba(16, 185, 129, 0.05);
+  color: #a7f3d0;
+  box-shadow: 0 2rpx 8rpx rgba(16, 185, 129, 0.03);
+}
+
+.dev-chip.offline {
+  background: rgba(255, 255, 255, 0.01);
+  border-color: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+}
+
+.chip-dot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+}
+
+.dev-chip.online .chip-dot {
+  background: #10b981;
+  box-shadow: 0 0 8rpx #10b981;
+}
+
+.dev-chip.offline .chip-dot {
+  background: var(--text-muted);
+}
+
+/* 遥测最近信息发布 */
+.publish-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14rpx;
+}
+
+.publish-item {
+  flex: 1;
+  min-width: 280rpx;
+  background: rgba(6, 9, 19, 0.45);
+  border: 1rpx solid rgba(255, 255, 255, 0.04);
+  border-radius: 20rpx;
+  padding: 16rpx 20rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  box-shadow: inset 0 1rpx 1rpx rgba(255, 255, 255, 0.01);
+}
+
+.publish-wide {
+  flex-basis: 100%;
+}
+
+.publish-label {
+  font-size: 18rpx;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.publish-value {
+  font-size: 22rpx;
+  color: var(--text-secondary);
+  font-weight: 600;
+  word-break: break-all;
+}
+
+/* 实时交互日志 */
+.log-box {
+  max-height: 400rpx;
+  overflow-y: auto;
+  background: rgba(3, 5, 11, 0.85);
+  border: 1rpx solid rgba(255, 255, 255, 0.03);
+  border-radius: 16rpx;
+  padding: 18rpx;
+  box-shadow: inset 0 4rpx 12rpx rgba(0, 0, 0, 0.5);
+}
+
+.log-entry {
+  display: flex;
+  gap: 16rpx;
+  padding: 8rpx 0;
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.02);
+  font-size: 18rpx;
+  font-family: monospace;
+}
+
+.log-time {
+  color: #475569;
+  flex-shrink: 0;
+}
+
+.log-topic {
+  color: var(--primary);
+  font-weight: 600;
+  flex-shrink: 0;
+  word-break: break-all;
+  max-width: 200rpx;
+}
+
+.log-msg {
+  color: #10b981;
+  word-break: break-all;
+}
+
+.empty-text {
+  color: #475569;
+  text-align: center;
+  padding: 40rpx;
+  font-size: 20rpx;
+}

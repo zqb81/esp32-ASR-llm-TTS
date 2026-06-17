@@ -1,0 +1,5 @@
+{
+  "usingComponents": {},
+  "navigationBarTitleText": "ESP32 IoT 控制台",
+  "enablePullDownRefresh": false
+}

@@ -1,0 +1,163 @@
+<view class="scroll-container">
+  <view class="tab-content-fade">
+    <!-- MQTT 服务端连接配置 -->
+    <view class="glass-card">
+      <view class="card-header">
+        <text class="card-icon text-primary">📡</text>
+        <text class="card-title">MQTT 代理服务器设置</text>
+      </view>
+
+      <view class="input-group-vertical">
+        <text class="input-label">预设公共 Broker</text>
+        <picker mode="selector" range="{{brokerOptions}}" range-key="label" value="{{brokerIndex}}" bindchange="onBrokerChange">
+          <view class="picker-display glass-input">{{brokerOptions[brokerIndex].label}} ▾</view>
+        </picker>
+      </view>
+
+      <view class="input-row">
+        <view class="input-group flex-1">
+          <text class="input-label">服务器主机 (Host)</text>
+          <input class="glass-input" value="{{mqttHost}}" bindinput="e => setData({mqttHost: e.detail.value})" />
+        </view>
+        <view class="input-group" style="width:180rpx">
+          <text class="input-label">端口 (Port)</text>
+          <input class="glass-input" type="number" value="{{mqttPort}}" bindinput="e => setData({mqttPort: e.detail.value})" />
+        </view>
+      </view>
+
+      <button class="btn {{mqttConnected ? 'btn-danger' : 'btn-primary'}} conn-toggle-btn" bindtap="toggleConnect">
+        {{mqttConnected ? '断开 MQTT 服务端连接' : '连接至 MQTT 代理端'}}
+      </button>
+    </view>
+
+    <!-- 警报阈值设定 -->
+    <view class="glass-card">
+      <view class="card-header">
+        <text class="card-icon">⚠️</text>
+        <text class="card-title">警报触发阈值设定</text>
+      </view>
+      
+      <!-- 温度阈值 -->
+      <view class="slider-group" style="margin-bottom: 24rpx;">
+        <view class="slider-title-row">
+          <text class="slider-title">🌡️ 温度警报触发上限</text>
+          <view class="slider-val-wrap">
+            <text class="slider-val-num text-warning">{{threshold}}</text>
+            <text class="slider-val-unit">°C</text>
+          </view>
+        </view>
+        <slider min="15" max="50" value="{{threshold}}" activeColor="#f59e0b" backgroundColor="rgba(255,255,255,0.08)" block-size="16" bindchange="onTempSliderChange" bindchanging="onTempSliderChanging" />
+      </view>
+
+      <!-- 湿度阈值 -->
+      <view class="slider-group" style="margin-bottom: 24rpx; border-top: 1rpx solid rgba(255,255,255,0.06); padding-top: 20rpx;">
+        <view class="slider-title-row">
+          <text class="slider-title">💧 湿度警报触发上限</text>
+          <view class="slider-val-wrap">
+            <text class="slider-val-num text-primary">{{threshold_humi}}</text>
+            <text class="slider-val-unit">%</text>
+          </view>
+        </view>
+        <slider min="30" max="95" value="{{threshold_humi}}" activeColor="#38bdf8" backgroundColor="rgba(255,255,255,0.08)" block-size="16" bindchange="onHumiSliderChange" bindchanging="onHumiSliderChanging" />
+      </view>
+
+      <!-- 光照阈值 -->
+      <view class="slider-group" style="border-top: 1rpx solid rgba(255,255,255,0.06); padding-top: 20rpx;">
+        <view class="slider-title-row">
+          <text class="slider-title">☀️ 光照过低警报下限</text>
+          <view class="slider-val-wrap">
+            <text class="slider-val-num text-light-glow">{{threshold_light}}</text>
+            <text class="slider-val-unit">lx</text>
+          </view>
+        </view>
+        <slider min="50" max="1500" value="{{threshold_light}}" activeColor="#fef08a" backgroundColor="rgba(255,255,255,0.08)" block-size="16" bindchange="onLightSliderChange" bindchanging="onLightSliderChanging" />
+      </view>
+    </view>
+
+    <!-- ESP32 外设芯片状态监测 -->
+    <view class="glass-card">
+      <view class="card-header">
+        <text class="card-icon">🔌</text>
+        <text class="card-title">物联网模组就绪检测</text>
+      </view>
+      <view class="device-chips">
+        <view class="dev-chip {{devices.dht ? 'online' : 'offline'}}">
+          <view class="chip-dot"></view>
+          <text>温湿传感器 (DHT) {{devices.dht ? 'ON' : 'OFF'}}</text>
+        </view>
+        <view class="dev-chip {{devices.light ? 'online' : 'offline'}}">
+          <view class="chip-dot"></view>
+          <text>光照敏传感器 (LDR) {{devices.light ? 'ON' : 'OFF'}}</text>
+        </view>
+        <view class="dev-chip {{devices.motor ? 'online' : 'offline'}}">
+          <view class="chip-dot"></view>
+          <text>风扇电机 (Motor) {{devices.motor ? 'ON' : 'OFF'}}</text>
+        </view>
+        <view class="dev-chip {{devices.rgb ? 'online' : 'offline'}}">
+          <view class="chip-dot"></view>
+          <text>氛围彩灯 (RGB) {{devices.rgb ? 'ON' : 'OFF'}}</text>
+        </view>
+        <view class="dev-chip {{devices.oled ? 'online' : 'offline'}}">
+          <view class="chip-dot"></view>
+          <text>液晶屏显示 (OLED) {{devices.oled ? 'ON' : 'OFF'}}</text>
+        </view>
+        <view class="dev-chip {{devices.buzzer ? 'online' : 'offline'}}">
+          <view class="chip-dot"></view>
+          <text>蜂鸣警报 (Buzzer) {{devices.buzzer ? 'ON' : 'OFF'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 遥测发布摘要 -->
+    <view class="glass-card">
+      <view class="card-header">
+        <text class="card-icon text-warning">📊</text>
+        <text class="card-title">最近上报遥测快照</text>
+      </view>
+      <view class="publish-grid">
+        <view class="publish-item">
+          <text class="publish-label">运行状态</text>
+          <text class="publish-value">{{publishStatus}}</text>
+        </view>
+        <view class="publish-item">
+          <text class="publish-label">传感器数据</text>
+          <text class="publish-value">{{publishSensor}}</text>
+        </view>
+        <view class="publish-item">
+          <text class="publish-label">异常报警记录</text>
+          <text class="publish-value">{{publishAlert}}</text>
+        </view>
+        <view class="publish-item">
+          <text class="publish-label">遥测刷新时间</text>
+          <text class="publish-value text-primary">{{publishTime}}</text>
+        </view>
+        <view class="publish-item publish-wide">
+          <text class="publish-label">最近 AI 回复文字</text>
+          <text class="publish-value">{{publishVoice}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- MQTT 交互日志控制台 -->
+    <view class="glass-card">
+      <view class="card-header" bindtap="toggleLogs">
+        <text class="card-icon">📝</text>
+        <text class="card-title">MQTT 实时通信终端</text>
+        <text class="text-muted" style="margin-left:auto;font-size:22rpx">{{showLogs ? '收起终端 ▴' : '展开终端 ▾'}}</text>
+      </view>
+
+      <view wx:if="{{showLogs}}">
+        <view class="log-box">
+          <view wx:if="{{logs.length === 0}}" class="empty-text">暂无交互报文</view>
+          <view wx:for="{{logs}}" wx:key="index" class="log-entry">
+            <text class="log-time">{{item.time}}</text>
+            <text class="log-topic">{{item.topic}}</text>
+            <text class="log-msg {{item.isAlert ? 'text-danger' : ''}}">{{item.msg}}</text>
+          </view>
+        </view>
+        <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:16rpx" bindtap="clearLogs">清空终端日志</button>
+      </view>
+    </view>
+  </view>
+  <view style="height:40rpx"></view>
+</view>

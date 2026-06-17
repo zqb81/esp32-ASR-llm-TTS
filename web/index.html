@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32 IoT 智能语音控制面板</title>
+    <link rel="stylesheet" href="style.css?v=3">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <!-- MQTT.js Client -->
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+
+    <!-- 离线横幅 -->
+    <div id="offlineBanner" class="offline-banner">
+        <i data-lucide="wifi-off" class="banner-icon"></i>
+        <span>ESP32 设备已离线，控制与数据上报可能已暂停</span>
+    </div>
+
+    <!-- 顶部导航栏 -->
+    <header class="header">
+        <div class="brand">
+            <div class="logo-glow"></div>
+            <h1>
+                <i data-lucide="cpu" class="logo-icon"></i>
+                ESP32 <span>语音+IoT</span> 智能终端
+            </h1>
+        </div>
+        <div class="status-container">
+            <div class="conn-status-badge">
+                <div class="status-indicator">
+                    <span class="dot off" id="aiDot"></span>
+                    <span class="pulse-ring"></span>
+                </div>
+                <span id="aiStatusText" class="status-label">AI 未连接</span>
+            </div>
+            <div class="conn-status-badge">
+                <div class="status-indicator">
+                    <span class="dot off" id="statusDot"></span>
+                    <span class="pulse-ring"></span>
+                </div>
+                <span id="statusText" class="status-label">MQTT 未连接</span>
+            </div>
+            <button class="btn btn-shutdown-header" onclick="shutdownServer()" title="彻底关闭后台服务器进程">
+                <i data-lucide="power"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- 主容器 -->
+    <main class="container">
+
+        <!-- 左侧边栏：配置、控制和系统日志 -->
+        <section class="sidebar-section">
+
+            <!-- MQTT 连接卡片 -->
+            <div class="glass-card compact-card">
+                <div class="card-header">
+                    <i data-lucide="radio" class="card-icon text-primary"></i>
+                    <h2>MQTT 连接配置</h2>
+                </div>
+                <div class="settings">
+                    <div class="input-row">
+                        <select id="brokerSelect" onchange="selectBroker(this.value)" class="glass-select">
+                            <option value="iot.lzjqpb.icu:443" selected>☁️ 私有 Mosquitto (云端)</option>
+                            <option value="broker-cn.emqx.io:8083">🇨🇳 EMQX 国内节点</option>
+                            <option value="broker.emqx.io:8083">🌐 EMQX 国际节点</option>
+                            <option value="test.mosquitto.org:8080">Mosquitto 测试服务</option>
+                        </select>
+                    </div>
+                    <div class="input-grid">
+                        <div class="input-group">
+                            <label for="brokerUrl">服务器</label>
+                            <input id="brokerUrl" value="iot.lzjqpb.icu" class="glass-input" placeholder="Broker">
+                        </div>
+                        <div class="input-group">
+                            <label for="brokerPort">端口</label>
+                            <input id="brokerPort" value="443" type="number" class="glass-input text-center"
+                                placeholder="端口">
+                        </div>
+                    </div>
+                    <button class="btn btn-connect" onclick="toggleConnect()" id="connBtn">
+                        <i data-lucide="power" class="btn-icon"></i>
+                        <span>开启连接</span>
+                    </button>
+                    <div class="hint-text">协议: ws:// | 用于局域网或公网 IoT 设备控制</div>
+                </div>
+            </div>
+
+            <!-- 设备控制卡片 -->
+            <div class="glass-card">
+                <div class="card-header">
+                    <i data-lucide="sliders" class="card-icon text-success"></i>
+                    <h2>IoT 设备动作控制</h2>
+                </div>
+                <div class="device-grid">
+                    <!-- 风扇控制 -->
+                    <div class="device-card" id="fanCard">
+                        <div class="dev-header">
+                            <div class="dev-title">
+                                <i data-lucide="wind" class="dev-icon fan-rotate-icon"></i>
+                                <span class="dev-name">风扇</span>
+                            </div>
+                            <span class="dev-status off" id="fanStatus">OFF</span>
+                        </div>
+                        <div class="dev-actions">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="fanToggle"
+                                    onchange="toggleFan(this.checked)">
+                                <span class="slider"></span>
+                            </label>
+                            <span class="dev-info" id="fanInfo">已关闭</span>
+                        </div>
+                        <!-- 风扇速度控制 -->
+                        <div class="web-slider-group" style="width: 100%; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px;" id="fanSpeedCtrl">
+                            <div class="web-slider-header" style="margin-bottom: 4px;">
+                                <span class="web-slider-title" style="font-size: 11px; color: var(--muted);"><i data-lucide="wind" class="small-icon"></i> 速度调节</span>
+                                <span class="web-slider-value" style="font-size: 11px;"><strong id="fanSpeedVal" style="color: var(--success);">0</strong> <span class="unit">%</span></span>
+                            </div>
+                            <input type="range" min="0" max="100" value="0" id="fanSpeedSlider" class="web-slider"
+                                oninput="document.getElementById('fanSpeedVal').textContent=this.value; updateFanUILocal(this.value)"
+                                onchange="adjustFanSpeed(this.value)">
+                        </div>
+                    </div>
+
+                    <!-- RGB 开关控制 -->
+                    <div class="device-card" id="rgbCard">
+                        <div class="dev-header">
+                            <div class="dev-title">
+                                <i data-lucide="palette" class="dev-icon"></i>
+                                <span class="dev-name">RGB</span>
+                            </div>
+                            <span class="dev-status off" id="rgbStatus">OFF</span>
+                        </div>
+                        <div class="dev-actions">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="rgbToggle"
+                                    onchange="toggleRgb(this.checked)">
+                                <span class="slider"></span>
+                            </label>
+                            <span class="dev-info" id="rgbInfo">已关闭</span>
+                        </div>
+                        <!-- RGB 氛围灯亮度调节 -->
+                        <div class="web-slider-group" style="width: 100%; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px;" id="rgbBrightCtrl">
+                            <div class="web-slider-header" style="margin-bottom: 4px;">
+                                <span class="web-slider-title" style="font-size: 11px; color: var(--muted);"><i data-lucide="sun" class="small-icon"></i> 亮度调节</span>
+                                <span class="web-slider-value" style="font-size: 11px;"><strong id="rgbBrightVal" style="color: #c084fc;">0</strong> <span class="unit">%</span></span>
+                            </div>
+                            <input type="range" min="0" max="100" value="0" id="rgbBrightSlider" class="web-slider rgb-bright-slider"
+                                oninput="document.getElementById('rgbBrightVal').textContent=this.value; updateRgbUILocal(this.value)"
+                                onchange="adjustRgbBrightness(this.value)">
+                        </div>
+                    </div>
+
+                    <!-- LED 开关控制 -->
+                    <div class="device-card" id="ledCard">
+                        <div class="dev-header">
+                            <div class="dev-title">
+                                <i data-lucide="lightbulb" class="dev-icon"></i>
+                                <span class="dev-name">LED</span>
+                            </div>
+                            <span class="dev-status off" id="ledStatus">OFF</span>
+                        </div>
+                        <div class="dev-actions">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="ledToggle"
+                                    onchange="sendCmd('led', this.checked ? '100' : '0')">
+                                <span class="slider"></span>
+                            </label>
+                            <span class="dev-info" id="ledInfo">已关闭</span>
+                        </div>
+                    </div>
+
+                    <!-- 蜂鸣器控制 -->
+                    <div class="device-card" id="buzzCard">
+                        <div class="dev-header">
+                            <div class="dev-title">
+                                <i data-lucide="bell" class="dev-icon buzz-shake-icon"></i>
+                                <span class="dev-name">蜂鸣器</span>
+                            </div>
+                            <span class="dev-status off" id="buzzStatus">OFF</span>
+                        </div>
+                        <div class="dev-actions">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="buzzToggle"
+                                    onchange="sendCmd('buzzer', this.checked ? 'on' : 'off')">
+                                <span class="slider"></span>
+                            </label>
+                            <span class="dev-info" id="buzzInfo">已关闭</span>
+                        </div>
+                    </div>
+
+                    <!-- RGB 彩灯控制 -->
+                    <div class="device-card full-width" id="rgbPanelCard">
+                        <div class="dev-header">
+                            <div class="dev-title">
+                                <i data-lucide="palette" class="dev-icon"></i>
+                                <span class="dev-name">RGB 彩灯 / 灯带</span>
+                            </div>
+                            <span class="dev-info">快速切换</span>
+                        </div>
+                        <div class="slider-row" style="flex-wrap:wrap; gap:8px;">
+                            <span
+                                style="font-size:12px; color:var(--muted); width:100%; display:block; margin-bottom:4px;">单色设置:</span>
+                            <button class="btn btn-action-sm btn-info" onclick="sendRgbPreset('red')">红色</button>
+                            <button class="btn btn-action-sm btn-info" onclick="sendRgbPreset('green')">绿色</button>
+                            <button class="btn btn-action-sm btn-info" onclick="sendRgbPreset('blue')">蓝色</button>
+                            <button class="btn btn-action-sm btn-info" onclick="sendRgbPreset('yellow')">黄色</button>
+                            <button class="btn btn-action-sm btn-info" onclick="sendRgbPreset('purple')">紫色</button>
+                            <button class="btn btn-action-sm btn-info" onclick="sendRgbPreset('white')">白光</button>
+                        </div>
+                        <div class="slider-row"
+                            style="flex-wrap:wrap; gap:8px; margin-top:8px; border-top: 1px solid rgba(255,255,255,0.08); padding-top:8px;">
+                            <span
+                                style="font-size:12px; color:var(--muted); width:100%; display:block; margin-bottom:4px;">动画特效:</span>
+                            <button class="btn btn-action-sm btn-primary" onclick="sendRgbAnim('rainbow')">🌈
+                                彩虹流动</button>
+                            <button class="btn btn-action-sm btn-primary"
+                                onclick="sendRgbAnim('breath', 0, 100, 255)">❄️ 极地呼吸</button>
+                            <button class="btn btn-action-sm btn-primary" onclick="sendRgbAnim('pulse', 255, 0, 100)">💓
+                                脉冲心跳</button>
+                            <button class="btn btn-action-sm btn-primary" onclick="sendRgbAnim('alarm', 255, 0, 0)">🚨
+                                报警闪烁</button>
+                            <button class="btn btn-action-sm btn-primary" onclick="sendRgbAnim('welcome')">✨
+                                欢迎动效</button>
+                        </div>
+                    </div>
+
+                    <!-- 警报触发阈值设定 -->
+                    <div class="device-card full-width" id="threshCard">
+                        <div class="dev-header">
+                            <div class="dev-title">
+                                <i data-lucide="alert-triangle" class="dev-icon"></i>
+                                <span class="dev-name">警报触发阈值设定</span>
+                            </div>
+                        </div>
+                        <div class="threshold-sliders-grid">
+                            <!-- 温度阈值 -->
+                            <div class="web-slider-group">
+                                <div class="web-slider-header">
+                                    <span class="web-slider-title"><i data-lucide="thermometer" class="small-icon"></i> 温度警报触发上限</span>
+                                    <span class="web-slider-value"><strong id="tempThreshVal" class="text-warning">30</strong> <span class="unit">°C</span></span>
+                                </div>
+                                <input type="range" min="15" max="50" value="30" id="tempThreshSlider" class="web-slider"
+                                    oninput="document.getElementById('tempThreshVal').textContent=this.value"
+                                    onchange="sendCmd('threshold', this.value)">
+                            </div>
+
+                            <!-- 湿度阈值 -->
+                            <div class="web-slider-group" style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+                                <div class="web-slider-header">
+                                    <span class="web-slider-title"><i data-lucide="droplet" class="small-icon"></i> 湿度警报触发上限</span>
+                                    <span class="web-slider-value"><strong id="humiThreshVal" class="text-primary">80</strong> <span class="unit">%</span></span>
+                                </div>
+                                <input type="range" min="30" max="95" value="80" id="humiThreshSlider" class="web-slider"
+                                    oninput="document.getElementById('humiThreshVal').textContent=this.value"
+                                    onchange="sendCmd('threshold_humi', this.value)">
+                            </div>
+
+                            <!-- 光照阈值 -->
+                            <div class="web-slider-group" style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+                                <div class="web-slider-header">
+                                    <span class="web-slider-title"><i data-lucide="sun" class="small-icon"></i> 光照过低警报下限</span>
+                                    <span class="web-slider-value"><strong id="lightThreshVal" class="text-light-glow">500</strong> <span class="unit">lux</span></span>
+                                </div>
+                                <input type="range" min="50" max="1500" value="500" id="lightThreshSlider" class="web-slider"
+                                    oninput="document.getElementById('lightThreshVal').textContent=this.value"
+                                    onchange="sendCmd('threshold_light', this.value)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-poll" onclick="sendCmd('poll','')">
+                    <i data-lucide="refresh-cw" class="btn-icon"></i>
+                    <span>立即拉取传感器数据 (Poll)</span>
+                </button>
+            </div>
+
+            <!-- 外设在线状态卡片 -->
+            <div class="glass-card">
+                <div class="card-header">
+                    <i data-lucide="layers" class="card-icon text-muted"></i>
+                    <h2>外设模组状态监测</h2>
+                </div>
+                <div class="device-status-panel" id="devicePanel">
+                    <div class="dev-chip offline" id="chip-dht">
+                        <div class="chip-dot"></div><span>DHT 温湿度</span>
+                    </div>
+                    <div class="dev-chip offline" id="chip-light">
+                        <div class="chip-dot"></div><span>光敏传感器</span>
+                    </div>
+                    <div class="dev-chip offline" id="chip-motor">
+                        <div class="chip-dot"></div><span>电机/风扇</span>
+                    </div>
+                    <div class="dev-chip offline" id="chip-rgb">
+                        <div class="chip-dot"></div><span>RGB LED</span>
+                    </div>
+                    <div class="dev-chip offline" id="chip-oled">
+                        <div class="chip-dot"></div><span>OLED 屏幕</span>
+                    </div>
+                    <div class="dev-chip offline" id="chip-buzzer">
+                        <div class="chip-dot"></div><span>蜂鸣器</span>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- 右侧主面板：环境 KPI、语音交互和系统日志 -->
+        <section class="main-section">
+
+            <!-- 环境传感器 KPI 板块 -->
+            <div class="sensors-and-metrics">
+
+                <!-- 传感器网格 -->
+                <div class="sensor-grid">
+
+                    <!-- 温度卡片 -->
+                    <div class="sensor-item temp offline-sensor" id="tempCard">
+                        <span class="sensor-badge offline" id="tempBadge">未连接</span>
+                        <div class="sensor-main">
+                            <div class="sensor-icon-wrap">
+                                <i data-lucide="thermometer" class="kpi-icon"></i>
+                            </div>
+                            <div class="sensor-data">
+                                <span class="label">环境温度</span>
+                                <div class="num-wrap">
+                                    <span class="value" id="tempVal">--</span>
+                                    <span class="unit">°C</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 湿度卡片 -->
+                    <div class="sensor-item humi offline-sensor" id="humiCard">
+                        <span class="sensor-badge offline" id="humiBadge">未连接</span>
+                        <div class="sensor-main">
+                            <div class="sensor-icon-wrap">
+                                <i data-lucide="droplet" class="kpi-icon"></i>
+                            </div>
+                            <div class="sensor-data">
+                                <span class="label">环境湿度</span>
+                                <div class="num-wrap">
+                                    <span class="value" id="humiVal">--</span>
+                                    <span class="unit">%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 光照卡片 -->
+                    <div class="sensor-item light offline-sensor" id="lightCard">
+                        <span class="sensor-badge offline" id="lightBadge">未连接</span>
+                        <div class="sensor-main">
+                            <div class="sensor-icon-wrap">
+                                <i data-lucide="sun" class="kpi-icon"></i>
+                            </div>
+                            <div class="sensor-data">
+                                <span class="label">环境光照</span>
+                                <div class="num-wrap">
+                                    <span class="value" id="lightVal">--</span>
+                                    <span class="unit">lux</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- 额外传感器展示 -->
+                <div class="extra-sensor-wrap glass-subcard">
+                    <div class="extra-sensor-title">
+                        <i data-lucide="combine" class="small-icon"></i>
+                        <span>其他传感器字段</span>
+                    </div>
+                    <div class="extra-sensor-list" id="extraSensorList">
+                        <div class="extra-empty">暂无额外传感器数据</div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ESP32 消息推送面板 -->
+            <div class="glass-card">
+                <div class="card-header">
+                    <i data-lucide="activity" class="card-icon text-warning"></i>
+                    <h2>ESP32 遥测发布摘要</h2>
+                </div>
+                <div class="publish-grid">
+                    <div class="publish-item">
+                        <span class="publish-label"><i data-lucide="server"></i> 运行状态</span>
+                        <strong id="publishStatus" class="publish-value">等待连接数据...</strong>
+                    </div>
+                    <div class="publish-item">
+                        <span class="publish-label"><i data-lucide="database"></i> 传感器快照</span>
+                        <strong id="publishSensor" class="publish-value">暂无</strong>
+                    </div>
+                    <div class="publish-item">
+                        <span class="publish-label"><i data-lucide="alert-circle"></i> 最近报警</span>
+                        <strong id="publishAlert" class="publish-value">无</strong>
+                    </div>
+                    <div class="publish-item publish-wide">
+                        <span class="publish-label"><i data-lucide="message-square"></i> 最近语音回复</span>
+                        <strong id="publishVoice" class="publish-value">暂无</strong>
+                    </div>
+                    <div class="publish-item publish-wide">
+                        <span class="publish-label"><i data-lucide="clock"></i> 最新遥测时间</span>
+                        <strong id="publishTime" class="publish-value text-mono">--:--:--</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 语音对话模块 -->
+            <div class="glass-card chat-assistant-card">
+                <div class="card-header">
+                    <i data-lucide="sparkles" class="card-icon text-primary"></i>
+                    <h2>AI 智能助手语音对话</h2>
+                    <button class="btn btn-auto-speak active" id="autoSpeakBtn" onclick="toggleAutoSpeak()">
+                        <i data-lucide="volume-2" class="speak-icon"></i>
+                        <span>自动播报: 开</span>
+                    </button>
+                </div>
+
+                <!-- 聊天对话框 -->
+                <div class="chat-box" id="chatBox">
+                    <div class="chat-welcome">
+                        <div class="welcome-avatar">
+                            <i data-lucide="bot" class="welcome-bot-icon"></i>
+                        </div>
+                        <h3>欢迎使用智能语音助手</h3>
+                        <p>请点击下方麦克风开始录音，或者在右侧输入框中直接输入文字，我可以根据当前的传感器状态控制您的智能设备。</p>
+                    </div>
+                </div>
+
+                <!-- 对话录音与文字发送控制栏 -->
+                <div class="voice-controls">
+
+                    <!-- 录音按键 -->
+                    <div class="mic-trigger-wrap">
+                        <button class="voice-btn" id="voiceBtn" onclick="toggleVoice()">
+                            <i data-lucide="mic" class="mic-icon"></i>
+                            <div class="wave-pulse pulse-1"></div>
+                            <div class="wave-pulse pulse-2"></div>
+                        </button>
+                        <span id="voiceStatus" class="voice-status-text">点击说话</span>
+                    </div>
+
+                    <!-- 模拟音波图 (录音中显示) -->
+                    <div class="visualizer-container" id="visualizer">
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                    </div>
+
+                    <!-- 文字输入区 -->
+                    <div class="text-input-group">
+                        <input type="text" id="textInput" placeholder="输入控制文本或打个招呼..."
+                            onkeydown="if(event.key==='Enter') sendTextMessage()" class="chat-text-input">
+                        <button class="btn btn-send-message" onclick="sendTextMessage()">
+                            <i data-lucide="send"></i>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- 系统实时日志 -->
+            <div class="glass-card log-area">
+                <div class="card-header">
+                    <i data-lucide="terminal" class="card-icon text-primary"></i>
+                    <h2>MQTT 实时遥测日志</h2>
+                    <button class="btn btn-clear-log" onclick="clearLog()">清空控制台</button>
+                </div>
+                <div class="log-box" id="logBox">
+                    <div class="empty">等待连接，暂无系统日志...</div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <script src="app.js?v=3"></script>
+    <script>
+        // 页面加载完毕后初始化 Lucide 图标
+        document.addEventListener("DOMContentLoaded", function () {
+            lucide.createIcons();
+        });
+    </script>
+</body>
+
+</html>

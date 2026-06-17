@@ -1,0 +1,42 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/ai/ai",
+    "pages/config/config"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#060913",
+    "navigationBarTitleText": "ESP32 智能语音终端",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#060913",
+    "backgroundTextStyle": "light"
+  },
+  "tabBar": {
+    "color": "#64748b",
+    "selectedColor": "#38bdf8",
+    "backgroundColor": "#0d1426",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "仪表盘",
+        "iconPath": "images/tab_dashboard.png",
+        "selectedIconPath": "images/tab_dashboard_active.png"
+      },
+      {
+        "pagePath": "pages/ai/ai",
+        "text": "AI 助手",
+        "iconPath": "images/tab_ai.png",
+        "selectedIconPath": "images/tab_ai_active.png"
+      },
+      {
+        "pagePath": "pages/config/config",
+        "text": "配置日志",
+        "iconPath": "images/tab_config.png",
+        "selectedIconPath": "images/tab_config_active.png"
+      }
+    ]
+  },
+  "sitemapLocation": "sitemap.json",
+  "style": "v2"
+}

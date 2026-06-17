@@ -1,0 +1,106 @@
+# ============================================================
+#  .gitignore — ESP32 ASR/LLM/TTS 项目
+# ============================================================
+
+# ---------- 敏感信息 ----------
+.env
+.env.local
+.env.*.local
+secrets.*
+esp32/secrets.py
+miniapp/utils/secrets.js
+*.key
+*.pem
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+.eggs/
+build/
+dist/
+develop-eggs/
+parts/
+sdist/
+var/
+wheels/
+*.manifest
+*.spec.bak
+server.spec
+
+# 虚拟环境
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# 测试 / 覆盖率
+.pytest_cache/
+.tox/
+.coverage
+.coverage.*
+htmlcov/
+.nox/
+
+# ---------- PyInstaller (dist/server.exe 等) ----------
+# 源码目录下的打包产物，不提交；如需分发请放到 GitHub Release
+*.exe
+onefile/
+
+# ---------- MicroPython / ESP32 ----------
+# 设备上 mpremote/rshell 同步产生的临时文件
+.micropython/
+mp_remote/
+# 编译后的 mpy 字节码（可选，按需保留）
+*.mpy
+
+# ---------- 日志与运行时数据 ----------
+logs/
+*.log
+*.log.*
+*.pid
+
+# ---------- 微信小程序 (miniapp) ----------
+# 微信开发者工具生成的项目私有配置与缓存
+miniprogram_npm/
+# project.private.config.json 含本地 appid / 路径，按团队约定决定是否忽略
+miniapp/project.private.config.json
+
+# ---------- Web (web/) ----------
+# 静态站点一般无需忽略，仅排除编辑器/构建产物
+web/node_modules/
+
+# ---------- Node (若引入前端工具链) ----------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---------- IDE / 编辑器 ----------
+.vscode/
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+.history/
+
+# ---------- 操作系统 ----------
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+# Linux
+*~
+.directory

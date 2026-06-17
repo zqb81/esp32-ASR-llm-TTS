@@ -1,0 +1,179 @@
+<scroll-view class="scroll-container" scroll-y refresher-enabled="{{true}}" refresher-triggered="{{refresherTriggered}}" bindrefresherrefresh="onRefresherRefresh" refresher-background="#060913" refresher-default-style="white">
+
+  <!-- 1. 顶部离线横幅 -->
+  <view class="offline-banner" wx:if="{{!espOnline && mqttConnected}}">
+    <text class="banner-text">⚠ ESP32 控制板已离线 (无传感器数据上报)</text>
+  </view>
+
+  <!-- 2. 连接状态栏 -->
+  <view class="status-bar">
+    <view class="status-badge">
+      <view class="status-dot {{aiOnline ? 'on' : 'off'}}"></view>
+      <text class="status-label">AI 服务器 {{aiOnline ? '在线' : '离线'}}</text>
+    </view>
+    <view class="status-badge">
+      <view class="status-dot {{mqttConnected ? 'on' : 'off'}}"></view>
+      <text class="status-label">{{mqttStatus}}</text>
+    </view>
+    <view class="status-badge">
+      <view class="status-dot {{espOnline ? 'on' : 'off'}}"></view>
+      <text class="status-label">ESP32 设备 {{espOnline ? '在线' : '离线'}}</text>
+    </view>
+  </view>
+
+  <!-- 环境传感器网格 -->
+  <view class="glass-card">
+    <view class="card-header">
+      <text class="card-icon">🌡</text>
+      <text class="card-title">环境状态监控</text>
+    </view>
+    
+    <view class="sensor-grid">
+      <!-- 温度 -->
+      <view class="sensor-card {{tempAlert ? 'alert' : ''}} {{!dhtOnline ? 'offline' : ''}}">
+        <view class="sensor-glow temp"></view>
+        <text class="sensor-card-label">🌡 温度</text>
+        <view class="sensor-card-value text-warning">
+          <text class="num">{{temperature}}</text>
+          <text class="unit">°C</text>
+        </view>
+        <text class="sensor-card-desc">{{dhtOnline ? (tempAlert ? '超温警报中' : '温度正常') : '模块未就绪'}}</text>
+      </view>
+
+      <!-- 湿度 -->
+      <view class="sensor-card {{!dhtOnline ? 'offline' : ''}}">
+        <view class="sensor-glow humi"></view>
+        <text class="sensor-card-label">💧 湿度</text>
+        <view class="sensor-card-value text-primary">
+          <text class="num">{{humidity}}</text>
+          <text class="unit">%</text>
+        </view>
+        <text class="sensor-card-desc">{{dhtOnline ? '相对湿度' : '模块未就绪'}}</text>
+      </view>
+
+      <!-- 光照 -->
+      <view class="sensor-card {{!lightOnline ? 'offline' : ''}}">
+        <view class="sensor-glow light"></view>
+        <text class="sensor-card-label">☀ 光照</text>
+        <view class="sensor-card-value text-light-glow">
+          <text class="num">{{light}}</text>
+          <text class="unit">lx</text>
+        </view>
+        <text class="sensor-card-desc">{{lightOnline ? '环境流明' : '模块未就绪'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 设备快捷控制 (网格布局) -->
+  <view class="control-grid" bindtap="onCardTap">
+    <!-- 风扇卡片 -->
+    <view class="control-card fan-active {{fan ? 'active' : ''}}">
+      <view class="control-card-top">
+        <view class="control-card-title-area">
+          <text class="control-icon {{fan ? 'spin-anim' : ''}}">🌀</text>
+          <text class="control-name">风扇</text>
+        </view>
+        <view class="status-badge-pill {{fan ? 'on' : 'off'}}">{{fan ? 'ON' : 'OFF'}}</view>
+      </view>
+      <view class="fan-slider-area" style="width: 100%; margin-top: 10rpx; display: flex; flex-direction: column;">
+        <view style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 2rpx;">
+          <text class="control-status-text {{fan ? 'text-success' : 'text-muted'}}" style="font-size: 20rpx;">{{fan ? '运转中' : '已关闭'}}</text>
+          <switch checked="{{fan}}" bindchange="onFanToggle" color="#10b981" disabled="{{!mqttConnected}}" style="transform: scale(0.65); transform-origin: right center; margin: 0; padding: 0;" />
+        </view>
+        <!-- 速度指示 -->
+        <view style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 6rpx; margin-bottom: -4rpx;">
+          <text style="font-size: 18rpx; color: #64748b;">速度调节</text>
+          <text style="font-size: 18rpx; color: #10b981; font-weight: bold;">{{fan ? fanSpeed : 0}}%</text>
+        </view>
+        <slider min="0" max="100" value="{{fan ? fanSpeed : 0}}" activeColor="#10b981" backgroundColor="rgba(255,255,255,0.08)" block-size="12" disabled="{{!mqttConnected}}" bindchange="onFanSpeedChange" bindchanging="onFanSpeedChanging" style="margin: 0; padding: 0;" />
+      </view>
+    </view>
+
+    <!-- RGB 卡片 -->
+    <view class="control-card rgb-active {{rgb ? 'active' : ''}}">
+      <view class="control-card-top">
+        <view class="control-card-title-area">
+          <text class="control-icon {{rgb ? 'glow-anim' : ''}}">🎨</text>
+          <text class="control-name">RGB</text>
+        </view>
+        <view class="status-badge-pill {{rgb ? 'on' : 'off'}}">{{rgb ? 'ON' : 'OFF'}}</view>
+      </view>
+      <view class="rgb-slider-area" style="width: 100%; margin-top: 10rpx; display: flex; flex-direction: column;">
+        <view style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 2rpx;">
+          <text class="control-status-text {{rgb ? 'text-primary' : 'text-muted'}}" style="font-size: 20rpx; color: #a855f7;">{{rgb ? '已开启' : '已关闭'}}</text>
+          <switch checked="{{rgb}}" bindchange="onRgbToggle" color="#a855f7" disabled="{{!mqttConnected}}" style="transform: scale(0.65); transform-origin: right center; margin: 0; padding: 0;" />
+        </view>
+        <!-- 亮度指示 -->
+        <view style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 6rpx; margin-bottom: -4rpx;">
+          <text style="font-size: 18rpx; color: #64748b;">亮度调节</text>
+          <text style="font-size: 18rpx; color: #a855f7; font-weight: bold;">{{rgb ? rgbBrightness : 0}}%</text>
+        </view>
+        <slider min="0" max="100" value="{{rgb ? rgbBrightness : 0}}" activeColor="#a855f7" backgroundColor="rgba(255,255,255,0.08)" block-size="12" disabled="{{!mqttConnected}}" bindchange="onRgbBrightnessChange" bindchanging="onRgbBrightnessChanging" style="margin: 0; padding: 0;" />
+      </view>
+    </view>
+
+    <!-- LED 卡片 -->
+    <view class="control-card {{led ? 'active' : ''}}">
+      <view class="control-card-top">
+        <view class="control-card-title-area">
+          <text class="control-icon {{led ? 'glow-anim' : ''}}">💡</text>
+          <text class="control-name">LED</text>
+        </view>
+        <view class="status-badge-pill {{led ? 'on' : 'off'}}">{{led ? 'ON' : 'OFF'}}</view>
+      </view>
+      <view class="control-card-bottom">
+        <text class="control-status-text {{led ? 'text-primary' : 'text-muted'}}">{{led ? '已开启' : '已关闭'}}</text>
+        <switch checked="{{led}}" bindchange="onLedToggle" color="#38bdf8" disabled="{{!mqttConnected}}" />
+      </view>
+    </view>
+
+    <!-- 蜂鸣器卡片 -->
+    <view class="control-card {{buzzer ? 'active' : ''}}">
+      <view class="control-card-top">
+        <view class="control-card-title-area">
+          <text class="control-icon {{buzzer ? 'wobble-anim' : ''}}">🔔</text>
+          <text class="control-name">蜂鸣器</text>
+        </view>
+        <view class="status-badge-pill {{buzzer ? 'on' : 'off'}}">{{buzzer ? 'ON' : 'OFF'}}</view>
+      </view>
+      <view class="control-card-bottom">
+        <text class="control-status-text {{buzzer ? 'text-danger' : 'text-muted'}}">{{buzzer ? '报警中' : '已关闭'}}</text>
+        <switch checked="{{buzzer}}" bindchange="onBuzzerToggle" color="#f43f5e" disabled="{{!mqttConnected}}" />
+      </view>
+    </view>
+  </view>
+
+  <!-- RGB 氛围灯与动画控制器 -->
+  <view class="glass-card" bindtap="onCardTap">
+    <view class="card-header">
+      <text class="card-icon">🎨</text>
+      <text class="card-title">RGB 氛围灯控制与特效</text>
+    </view>
+    
+    <view style="font-size: 24rpx; color: #94a3b8; margin: 12rpx 0; width: 100%; display: block;">色彩预设:</view>
+    <view class="rgb-grid">
+      <button class="btn btn-sm rgb-btn {{rgbColor === 'red' ? 'active' : ''}}" style="background:linear-gradient(135deg, #ef4444, #b91c1c);color:#fff" data-color="red" disabled="{{!mqttConnected}}" bindtap="onRgbPreset">烈焰红</button>
+      <button class="btn btn-sm rgb-btn {{rgbColor === 'green' ? 'active' : ''}}" style="background:linear-gradient(135deg, #22c55e, #15803d);color:#fff" data-color="green" disabled="{{!mqttConnected}}" bindtap="onRgbPreset">极光绿</button>
+      <button class="btn btn-sm rgb-btn {{rgbColor === 'blue' ? 'active' : ''}}" style="background:linear-gradient(135deg, #3b82f6, #1d4ed8);color:#fff" data-color="blue" disabled="{{!mqttConnected}}" bindtap="onRgbPreset">深海蓝</button>
+      <button class="btn btn-sm rgb-btn {{rgbColor === 'yellow' ? 'active' : ''}}" style="background:linear-gradient(135deg, #eab308, #a16207);color:#060913;font-weight:700" data-color="yellow" disabled="{{!mqttConnected}}" bindtap="onRgbPreset">琥珀黄</button>
+      <button class="btn btn-sm rgb-btn {{rgbColor === 'purple' ? 'active' : ''}}" style="background:linear-gradient(135deg, #a855f7, #6b21a8);color:#fff" data-color="purple" disabled="{{!mqttConnected}}" bindtap="onRgbPreset">幻影紫</button>
+      <button class="btn btn-sm rgb-btn {{rgbColor === 'white' ? 'active' : ''}}" style="background:#f8fafc;color:#060913;font-weight:700" data-color="white" disabled="{{!mqttConnected}}" bindtap="onRgbPreset">日光白</button>
+    </view>
+
+    <view style="font-size: 24rpx; color: #94a3b8; margin: 16rpx 0 12rpx 0; width: 100%; display: block; border-top: 1rpx solid rgba(255,255,255,0.08); padding-top: 16rpx;">动画特效:</view>
+    <view class="rgb-grid">
+      <button class="btn btn-sm rgb-btn {{rgbColor === 'rainbow' ? 'active' : ''}}" style="background:linear-gradient(135deg, #ef4444, #3b82f6);color:#fff" data-anim="rainbow" disabled="{{!mqttConnected}}" bindtap="onRgbAnim">🌈 彩虹流动</button>
+      <button class="btn btn-sm rgb-btn {{rgbColor === 'breath' ? 'active' : ''}}" style="background:linear-gradient(135deg, #0284c7, #cbd5e1);color:#fff" data-anim="breath" data-r="0" data-g="100" data-b="255" disabled="{{!mqttConnected}}" bindtap="onRgbAnim">❄️ 极地呼吸</button>
+      <button class="btn btn-sm rgb-btn {{rgbColor === 'pulse' ? 'active' : ''}}" style="background:linear-gradient(135deg, #db2777, #f43f5e);color:#fff" data-anim="pulse" data-r="255" data-g="0" data-b="100" disabled="{{!mqttConnected}}" bindtap="onRgbAnim">💓 脉冲心跳</button>
+      <button class="btn btn-sm rgb-btn {{rgbColor === 'alarm' ? 'active' : ''}}" style="background:linear-gradient(135deg, #dc2626, #b91c1c);color:#fff" data-anim="alarm" data-r="255" data-g="0" data-b="0" disabled="{{!mqttConnected}}" bindtap="onRgbAnim">🚨 报警闪烁</button>
+      <button class="btn btn-sm rgb-btn {{rgbColor === 'welcome' ? 'active' : ''}}" style="background:linear-gradient(135deg, #059669, #10b981);color:#fff" data-anim="welcome" disabled="{{!mqttConnected}}" bindtap="onRgbAnim">✨ 欢迎动效</button>
+    </view>
+    
+    <button class="btn btn-ghost fetch-btn" disabled="{{!mqttConnected}}" bindtap="onPollData">
+      🔄 立即刷新传感器遥测值
+    </button>
+  </view>
+
+  <view style="height:40rpx"></view>
+
+</scroll-view>

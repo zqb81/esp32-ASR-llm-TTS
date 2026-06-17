@@ -1,0 +1,17 @@
+[Unit]
+Description=ESP32 IoT Voice Assistant Server
+After=network.target mosquitto.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/esp-iot
+ExecStart=/usr/bin/python3 /opt/esp-iot/server.py --no-gui
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

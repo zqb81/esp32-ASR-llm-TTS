@@ -1,0 +1,362 @@
+/* pages/index/index.wxss — ESP32 IoT 仪表盘控制面板样式 */
+
+.tab-content-fade {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== 离线警告横幅 ===== */
+.offline-banner {
+  background: linear-gradient(90deg, rgba(244, 63, 94, 0.9), rgba(159, 18, 57, 0.9));
+  border: 1rpx solid rgba(244, 63, 94, 0.2);
+  border-radius: 20rpx;
+  padding: 20rpx;
+  text-align: center;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 16rpx rgba(244, 63, 94, 0.15);
+}
+
+.banner-text {
+  color: #ffe4e6;
+  font-size: 24rpx;
+  font-weight: 600;
+  letter-spacing: 1rpx;
+}
+
+/* ===== 顶部连接状态栏 ===== */
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin-bottom: 28rpx;
+}
+
+.status-badge {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1rpx solid rgba(255, 255, 255, 0.05);
+  border-radius: 30rpx;
+  padding: 12rpx 16rpx;
+  box-shadow: inset 0 2rpx 2rpx rgba(255, 255, 255, 0.02);
+}
+
+.status-label {
+  color: var(--text-secondary);
+  font-size: 20rpx;
+  font-weight: 500;
+  letter-spacing: 0.5rpx;
+}
+
+/* ===== 传感器卡片网格 ===== */
+.sensor-grid {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 10rpx;
+}
+
+.sensor-card {
+  flex: 1;
+  background: rgba(6, 9, 19, 0.5);
+  border: 1rpx solid rgba(255, 255, 255, 0.05);
+  border-radius: 24rpx;
+  padding: 24rpx 16rpx;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: inset 0 1rpx 1rpx rgba(255, 255, 255, 0.02);
+}
+
+/* 卡片背后霓虹微光 */
+.sensor-glow {
+  position: absolute;
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  filter: blur(40rpx);
+  opacity: 0.15;
+  top: -20rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.sensor-glow.temp { background: var(--warning); }
+.sensor-glow.humi { background: var(--primary); }
+.sensor-glow.light { background: #eab308; }
+
+.sensor-card.alert {
+  background: rgba(244, 63, 94, 0.05);
+  border-color: rgba(244, 63, 94, 0.35);
+  box-shadow: 0 0 16rpx rgba(244, 63, 94, 0.05);
+}
+
+.sensor-card.offline {
+  opacity: 0.35;
+}
+
+.sensor-card-label {
+  font-size: 20rpx;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-bottom: 12rpx;
+}
+
+.sensor-card-value {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4rpx;
+  margin-bottom: 8rpx;
+}
+
+.sensor-card-value .num {
+  font-size: 40rpx;
+  font-weight: 700;
+  letter-spacing: -0.5rpx;
+}
+
+.sensor-card-value .unit {
+  font-size: 20rpx;
+  color: var(--text-muted);
+}
+
+.text-light-glow {
+  color: #fef08a;
+  text-shadow: 0 0 8rpx rgba(254, 240, 138, 0.3);
+}
+
+.sensor-card-desc {
+  font-size: 16rpx;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ===== 设备快捷控制网格 ===== */
+.control-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+  margin-bottom: 24rpx;
+}
+
+.control-card {
+  width: calc(50% - 10rpx);
+  box-sizing: border-box;
+  background: var(--card-bg);
+  border: 1rpx solid var(--card-border);
+  border-radius: 28rpx;
+  padding: 24rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 200rpx;
+  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.control-card.active {
+  border-color: rgba(16, 185, 129, 0.3);
+  background: rgba(13, 20, 38, 0.85);
+  box-shadow: 0 8rpx 24rpx rgba(16, 185, 129, 0.08);
+}
+
+.control-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.control-card-title-area {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  overflow: hidden;
+}
+
+.control-icon {
+  font-size: 32rpx;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.control-name {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+/* Pill badge styling */
+.status-badge-pill {
+  font-size: 16rpx;
+  font-weight: 700;
+  padding: 4rpx 12rpx;
+  border-radius: 10rpx;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  letter-spacing: 0.5rpx;
+}
+
+.status-badge-pill.on {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--success);
+}
+
+.control-card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: auto;
+}
+
+.control-card-bottom switch {
+  transform: scale(0.75);
+  transform-origin: right center;
+}
+
+.control-status-text {
+  font-size: 20rpx;
+  font-weight: 500;
+}
+
+/* 动效绑定 */
+.spin-anim {
+  animation: spin 3s infinite linear;
+}
+
+.wobble-anim {
+  animation: wobble 0.6s infinite ease-in-out;
+}
+
+.glow-anim {
+  animation: glow 1.5s infinite ease-in-out;
+}
+
+@keyframes glow {
+  0%, 100% { filter: brightness(1); transform: scale(1); }
+  50% { filter: brightness(1.4); transform: scale(1.1); }
+}
+
+/* ===== 滑块行 ===== */
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-top: 10rpx;
+}
+
+.value-badge {
+  font-size: 26rpx;
+  font-weight: 700;
+  margin-left: auto;
+  padding: 4rpx 16rpx;
+  background: rgba(56, 189, 248, 0.1);
+  border-radius: 12rpx;
+}
+
+.slider-send-btn {
+  padding: 12rpx 24rpx !important;
+  font-size: 22rpx !important;
+  border-radius: 14rpx;
+}
+
+/* ===== RGB 氛围灯网格 ===== */
+.rgb-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14rpx;
+  margin-top: 8rpx;
+}
+
+.rgb-btn {
+  flex: 1;
+  min-width: 150rpx;
+  padding: 16rpx 20rpx !important;
+  font-size: 22rpx !important;
+  border-radius: 14rpx;
+  box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.15);
+  border: 3rpx solid transparent !important;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.rgb-btn:active {
+  transform: scale(0.96);
+  opacity: 0.95;
+}
+
+.rgb-btn.active {
+  transform: scale(1.05);
+  border: 3rpx solid rgba(255, 255, 255, 0.9) !important;
+  box-shadow: 0 0 18rpx rgba(255, 255, 255, 0.4);
+  font-weight: 700;
+}
+
+.fetch-btn {
+  width: 100%;
+  margin-top: 28rpx;
+  font-size: 24rpx !important;
+}
+
+/* Slider styling from config.wxss */
+.slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  width: 100%;
+}
+
+.slider-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.slider-title {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.slider-val-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 4rpx;
+}
+
+.slider-val-num {
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.slider-val-unit {
+  font-size: 18rpx;
+  color: var(--text-muted);
+}
+.control-card.fan-active,
+.control-card.rgb-active {
+  height: auto;
+  min-height: 200rpx;
+}

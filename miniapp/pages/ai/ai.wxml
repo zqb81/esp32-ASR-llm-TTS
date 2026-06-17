@@ -1,0 +1,102 @@
+<view class="page-container">
+  
+  <!-- 1. 全局顶部连接状态栏 (微信公告提示风格) -->
+  <view class="ai-status-header">
+    <view class="status-indicators">
+      <view class="status-indicator">
+        <view class="status-dot {{aiOnline ? 'on' : 'off'}}"></view>
+        <text class="status-label">AI {{aiOnline ? '就绪' : '未连接'}}</text>
+      </view>
+      <view class="status-indicator">
+        <view class="status-dot {{mqttConnected ? 'on' : 'off'}}"></view>
+        <text class="status-label">通信 {{mqttConnected ? '在线' : '离线'}}</text>
+      </view>
+    </view>
+    <button class="auto-speak-toggle {{autoSpeak ? 'active' : ''}}" bindtap="toggleAutoSpeak">
+      {{autoSpeak ? '🔊 播报开启' : '🔇 静音模式'}}
+    </button>
+  </view>
+
+  <!-- 2. 聊天历史滚动面板 -->
+  <scroll-view class="chat-scroll-view" scroll-y scroll-into-view="{{scrollToMsg}}">
+    <!-- 欢迎卡片 (微信服务号关注欢迎消息风格) -->
+    <view wx:if="{{chatMessages.length === 0}}" class="welcome-container">
+      <view class="welcome-card">
+        <view class="welcome-robot">🤖</view>
+        <text class="welcome-title">智能空间 AI 管家</text>
+        <text class="welcome-desc">您可以点击底部输入栏左侧的图标切换模式。支持“键盘输入”或切换到“语音模式”，按住说话来控制您的智能硬件（例如说“开启风扇”、“当前光照是多少”）。</text>
+      </view>
+    </view>
+
+    <!-- 聊天气泡列表 -->
+    <block wx:for="{{chatMessages}}" wx:key="index">
+      
+      <!-- 微信时间戳：每个消息上方居中展示 -->
+      <view class="chat-time-wrap">
+        <text class="chat-time">{{item.time}}</text>
+      </view>
+
+      <!-- 系统消息：居中灰色小圆角矩形 -->
+      <view id="msg-{{index}}" class="system-msg-row" wx:if="{{item.role === 'system'}}">
+        <view class="system-msg-text">
+          <text class="system-icon">⚙</text>
+          <text>{{item.text}}</text>
+        </view>
+      </view>
+
+      <!-- 用户 & 助手对话消息 -->
+      <view id="msg-{{index}}" class="chat-msg-row {{item.role}}" wx:else>
+        <!-- 头像 (微信方形圆角头像) -->
+        <view class="avatar-wrap">
+          <text class="avatar-emoji">{{item.role === 'user' ? '👤' : '🤖'}}</text>
+        </view>
+        
+        <!-- 气泡包裹层 -->
+        <view class="bubble-container">
+          <view class="chat-bubble {{item.role}} {{item.role === 'assistant' ? 'playable' : ''}}" data-text="{{item.text}}" data-role="{{item.role}}" bindtap="onReplayVoice">
+            <text class="bubble-text">{{item.text}}</text>
+            <text wx:if="{{item.role === 'assistant'}}" class="replay-speaker-icon">🔊</text>
+          </view>
+        </view>
+      </view>
+
+    </block>
+    
+    <!-- 占位，防止最后一条消息被输入框遮挡 -->
+    <view class="bottom-placeholder"></view>
+  </scroll-view>
+
+  <!-- 3. 悬浮录音全屏遮罩 (按住说话时浮现) -->
+  <view class="recording-overlay {{isRecording ? 'show' : ''}}" wx:if="{{isRecording}}">
+    <view class="recording-card">
+      <view class="recording-mic-icon">🎙</view>
+      <view class="recording-volume-bar">
+        <view class="volume-dot"></view>
+        <view class="volume-dot active"></view>
+        <view class="volume-dot"></view>
+      </view>
+      <text class="recording-status-text">正在录制语音</text>
+      <text class="recording-hint">松开 结束并发送</text>
+    </view>
+  </view>
+
+  <!-- 4. 底部微信聊天输入栏 -->
+  <view class="bottom-input-bar">
+    <!-- 模式切换按钮 (保持 DOM 稳定) -->
+    <view class="mode-toggle-btn" bindtap="switchInputMode">
+      <text class="toggle-icon">{{inputMode === 'text' ? '🎤' : '⌨'}}</text>
+    </view>
+    
+    <!-- 输入框 -->
+    <input class="chat-input-field {{inputMode === 'text' ? '' : 'hide'}}" placeholder="输入控制文本或对话内容..." value="{{inputText}}" bindinput="onInputChange" bindconfirm="onSendText" confirm-type="send" placeholder-style="color:#b2b2b2" />
+    
+    <!-- 发送按钮 -->
+    <button class="send-btn {{inputMode === 'text' ? '' : 'hide'}} {{inputText ? 'active' : ''}}" bindtap="onSendText" disabled="{{isChatting || !inputText}}">发送</button>
+
+    <!-- 语音按钮 -->
+    <button class="hold-speak-btn {{inputMode === 'voice' ? '' : 'hide'}} {{isRecording ? 'active' : ''}}" bindtouchstart="onVoiceStart" bindtouchend="onVoiceEnd" bindtouchcancel="onVoiceCancel">
+      {{isRecording ? '松开 结束发送' : '按住 说话'}}
+    </button>
+  </view>
+
+</view>
