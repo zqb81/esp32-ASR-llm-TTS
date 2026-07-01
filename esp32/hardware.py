@@ -142,7 +142,7 @@ btn_released = False   # True = 短按松开（单次消费）
 btn_long_press = False   # True = 长按松开（单次消费）
 btn_press_start_ms = 0   # 按下时刻时间戳
 btn_last_irq_ms = 0   # 上次中断时间戳（消抖用）
-_DEBOUNCE_MS = 50        # 消抖窗口
+_DEBOUNCE_MS = 200        # 消抖窗口（ms），防止电气干扰误触发
 
 
 def _btn_irq_handler(pin):
@@ -162,9 +162,10 @@ def _btn_irq_handler(pin):
     else:                       # 松开
         btn_pressed = False
         duration = utime.ticks_diff(now, btn_press_start_ms)
-        if duration >= config.BTN_LONG_PRESS_MS:
+        # 防误触：最小按下时间 100ms才算有效按压
+        if duration >= config.BTN_LONG_PRESS_MS and duration >= 100:
             btn_long_press = True   # 长按
-        else:
+        elif duration >= 100:     # 有效短按（至少按100ms）
             btn_released = True     # 短按
 
 
@@ -324,14 +325,22 @@ def rgb_off():
 
 
 def rgb_color(name):
-    """快捷设置静态颜色：idle, listening, thinking, speaking, error (自动关闭动画)"""
+    """快捷设置静态颜色：支持预设状态 + 颜色名称"""
     stop_animation()
     colors = {
+        # 预设状态
         "idle":      (0, 0, 10),      # 微蓝
         "listening": (0, 80, 0),      # 绿色
         "thinking":  (80, 80, 0),     # 黄色
         "speaking":  (0, 0, 80),      # 蓝色
         "error":     (80, 0, 0),      # 红色
+        # 颜色名称（网页控制用）
+        "red":       (255, 0, 0),     # 红色
+        "green":     (0, 255, 0),     # 绿色
+        "blue":      (0, 0, 255),     # 蓝色
+        "yellow":    (255, 255, 0),   # 黄色
+        "purple":    (128, 0, 128),   # 紫色
+        "white":     (255, 255, 255), # 白色
     }
     r, g, b = colors.get(name, (0, 0, 0))
     global _last_static_rgb

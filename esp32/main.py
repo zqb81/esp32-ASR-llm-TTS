@@ -574,12 +574,12 @@ async def button_monitor_task():
     while True:
         await asyncio.sleep_ms(20)
 
-        # 紧急长按处理
-        if hw.consume_long_press():
-            emergency_shutdown()
-            hw.clear_button_state()
-            button_was_pressed = False
-            continue
+        # 紧急长按处理（已屏蔽）
+        # if hw.consume_long_press():
+        #     emergency_shutdown()
+        #     hw.clear_button_state()
+        #     button_was_pressed = False
+        #     continue
 
         pressed = hw.is_button_pressed()
         if pressed and not button_was_pressed:

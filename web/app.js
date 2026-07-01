@@ -11,7 +11,14 @@ let lastSensorTime = 0;
 const TOPIC_SUB = 'esp32/iot/#';
 const TOPIC_VOICE_OUT = 'esp32/iot/voice/output';
 const CMD_PREFIX = 'esp32/iot/cmd/';
-const API_CHAT = '/api/chat';
+// 动态检测 API 基础地址（支持云部署与本地 EXE 运行）
+const API_BASE = (window.location.hostname === 'iot.lzjqpb.icu' || (window.location.hostname === 'localhost' && window.location.port === '8080') || (window.location.hostname === '127.0.0.1' && window.location.port === '8080')) 
+    ? '' 
+    : 'http://iot.lzjqpb.icu';
+
+const API_CHAT = API_BASE + '/api/chat';
+const API_TTS = API_BASE + '/api/tts';
+const API_SHUTDOWN = API_BASE + '/api/shutdown';
 
 let deviceState = { fan: false, buzzer: false, led: false, rgb: false, threshold: 30, threshold_humi: 80, threshold_light: 500, rgb_brightness: 100 };
 let lastFanSpeed = 50;
@@ -796,7 +803,7 @@ async function chatWithAI(text) {
 // ============================================================
 //  语音输入 (AudioContext WAV 录音 + MiMo ASR)
 // ============================================================
-const API_ASR = '/api/asr';
+const API_ASR = API_BASE + '/api/asr';
 let isListening = false;
 let micStream = null;
 let audioContext = null;
@@ -1022,7 +1029,7 @@ async function speakText(text, forcePlay = false) {
     stopAudio();  // 先停掉上一条
     ttsAbortCtrl = new AbortController();
     try {
-        const resp = await fetch('/api/tts', {
+        const resp = await fetch(API_TTS, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ text }),
@@ -1120,7 +1127,7 @@ async function shutdownServer() {
         return;
     }
     try {
-        const resp = await fetch("/api/shutdown", { method: "POST" });
+        const resp = await fetch(API_SHUTDOWN, { method: "POST" });
         if (resp.ok) {
             alert("后台服务器已成功关闭！\n您现在可以关闭此浏览器窗口。");
             // 尝试直接关闭页面
